@@ -1,7 +1,7 @@
 clear;
 
-//------------------------------------------ RANDOMISATION DU DECK (LENT) [inutilisé]
-function cards=ShuffleDeckLent(cardPile)
+//------------------------------------------ RANDOMISATION DU DECK (LENT)
+function cards=SDLent(cardPile)
 d = 1
 while(d <= 52)
     ran = grand(1,1,"uin",1,52);
@@ -14,16 +14,22 @@ cards = cardPile;
 endfunction
 
 //------------------------------------------ RANDOMISATION DU DECK (RAPIDE)
-function cards=ShuffleDeckRapide(cardPile)
-cards = samwr(52,1,cardPile);   //on utilise le tirage aléatoire sans remise pour cette fonction
+function cards=SDRapide(cardPile)
+    cards = samwr(52,1,cardPile);   //on utilise le tirage aléatoire sans remise pour cette fonction
 endfunction
 
+
+//----------------------------------------- RANDOMISATION DU DECK (INJUSTE J1)
+function cards=SDInjuste(cardPile)
+    cards = gsort(cardPile);    //J1 aura toues les grandes cartes, pas de hasard
+function
+
 //------------------------------------------ DISTRIBUION
-function [jeu1,jeu2]=distribution()
+function [jeu1,jeu2]=distribution(méthodeDistribution)
 cardPile = 1:13;
 cardPile = repmat(cardPile,4,1);    //on répète le contenu du tableay cardPile 4 fois (4x13 = 42)
 
-cardPile = ShuffleDeckRapide(cardPile); //trie le tas de cartes (deck) au hasard
+cardPile = méthodeDistribution(cardPile); //trie le tas de cartes (deck) selon la méthode de choix
 
 jeu1 = cardPile(1:26);  //on sépare les cartes en 2 tas de 26 cartes
 jeu2 = cardPile(27:52);
@@ -37,37 +43,37 @@ graphJ1 = 0;
 graphJ2 = 0;
 
 while(length(jeu1) > 0 && length(jeu2) > 0)
-    graphJ1($+1) = jeu1(1);
-    graphJ2($+1) = jeu2(1);
+graphJ1($+1) = jeu1(1);
+graphJ2($+1) = jeu2(1);
 
-    if(length(jeu1) + length(jeu2) ~= 52) then
-        printf("\n ERREUR PAS 52: %d\n", length(jeu1) + length(jeu2));
-    end
-
-    if(jeu1(1) > jeu2(1)) then  //la première carte du joueur 1 est meilleure
+if(length(jeu1) + length(jeu2) ~= 52) then
+    printf("\n ERREUR PAS 52: %d\n", length(jeu1) + length(jeu2));
+end
+if(jeu1(1) > jeu2(1)) then  //la première carte du joueur 1 est meilleure
+    jeu1($+1) = jeu1(1);    //Le joueur 1 récupère les 2 cartes
+    jeu1($+1) = jeu2(1);
+elseif(jeu1(1) < jeu2(1)) then //la première carte du joueur 2 est meilleure
+    jeu2($+1) = jeu2(1);    //Le joueur 2 récupère les 2 cartes
+    jeu2($+1) = jeu1(1);
+else                        //égalité - bataille
+    winner = grand(1,1,"uin",1,2);
+    if(winner == 1) then
         jeu1($+1) = jeu1(1);    //Le joueur 1 récupère les 2 cartes
         jeu1($+1) = jeu2(1);
-    elseif(jeu1(1) < jeu2(1)) then //la première carte du joueur 2 est meilleure
-        jeu2($+1) = jeu2(1);    //Le joueur 2 récupère les 2 cartes
-        jeu2($+1) = jeu1(1);
-    else                        //égalité - bataille
-        winner = grand(1,1,"uin",1,2);
-        if(winner == 1) then
-            jeu1($+1) = jeu1(1);    //Le joueur 1 récupère les 2 cartes
-            jeu1($+1) = jeu2(1);
-        else
-            jeu1($+1) = jeu1(1);    //Le joueur 2 récupère les 2 cartes
-            jeu2($+1) = jeu1(1);
-        end
-    end
-    jeu1 = jeu1(2:$);
-    jeu2 = jeu2(2:$);
-    end
-    gagnantJ1 = (length(jeu1) > length(jeu2));
-    if(gagnantJ1)
-    disp("J1 a gagné");
     else
-    disp("J2 a gagné");
+        jeu1($+1) = jeu1(1);    //Le joueur 2 récupère les 2 cartes
+        jeu2($+1) = jeu1(1);
+    end
+end
+jeu1 = jeu1(2:$);
+jeu2 = jeu2(2:$);
+end
+
+gagnantJ1 = (length(jeu1) > length(jeu2));
+if(gagnantJ1)
+disp("J1 a gagné");
+else
+disp("J2 a gagné");
 end
 endfunction
 //-----------------------------------------------------------BATAILLE COMPLEXE
@@ -130,8 +136,7 @@ endfunction
 //1) Durée moyenne d'une partie
 
 //----------------------------------------------------------TESTS
-function [] = testJeuNormalBatailleComplexe()
-    nbParties = 1000;   //La seule valeur à changer, cela représente le nombre de tirages (parties) à simuler
+function [] = LanceBataille(nbParties, typeBataille, typeDistribution)
     resultat = 0;   //1 si J1 a gagné, 0 si J2 a gagné
     nbTours = 0;
     moyTours = 0;
@@ -148,7 +153,7 @@ function [] = testJeuNormalBatailleComplexe()
     while i <= nbParties
         tickIndex = (i*26);
         tJeuTot = timer()+tJeuTot;
-        [jeu1,jeu2] = distribution();  //distribution des cartes
+        [jeu1,jeu2] = distribution(typeDistribution);  //distribution des cartes, qui va utiliser le type de distribution passé en argument
         ForceJeu(i) = etudeDeForce(jeu1, jeu2);
 
         for(c = tickIndex+1:tickIndex+26)   //une action type cat (optimisé), on rècupère l'historique de chaque tirage (les cartes au début)
@@ -156,7 +161,7 @@ function [] = testJeuNormalBatailleComplexe()
             jeu2Historique(c) = jeu2(c-tickIndex);
         end;
 
-        [J1gagnant, nbTours(i)] = batailleComplexe(jeu1,jeu2);  //execution du jeu bataille complexe
+        [J1gagnant, nbTours(i)] = typeBataille(jeu1,jeu2);  //execution du jeu bataille complexe
         resultat(i) = J1gagnant;
 
         if(nbTours(i) > maxTours)
@@ -170,7 +175,7 @@ function [] = testJeuNormalBatailleComplexe()
         moyTours = moyTours + nbTours(i);//on ajoute le nombre total de tours pour ce tirage au nb total pour tous
         i = i +1;   //incrémentation du nb de batailles effectuées
     end
-    
+
     printf("\nTemps d execution total : %f",tJeuTot);
     printf("\nTemps d execution moyen : %f",tJeuTot/tJeuNb);
 
@@ -201,3 +206,5 @@ function [] = testJeuNormalBatailleComplexe()
     bar(x,y,'grouped');
 
 endfunction
+
+//____________________________________________________________________________________________________________________________
