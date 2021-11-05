@@ -179,6 +179,22 @@ function [gagnantJ1, tour] = batailleComplexeAleat(jeu1,jeu2)
     gagnantJ1 = (length(jeu1) > length(jeu2));
     err = 0;
     endfunction
+//----------------------------------------------------------UTILITAIRES SPECIFIQUES
+function [tableauSoigne] = soigneTableau(tableau)   //Cette fonction assure le retour d'un tableau de 2x2 cellules, et évite les erreurs d'indice post-tabul.
+    if(length(tableau) ~= 4) then  //J1 ou J2 n'a eu aucune victoire, le tableau sera incomplet et cela causera une erreur d'indice
+      if(tableau(1) == 1) then
+        tableau(2,1) = 2;  //on complète la 2 ème ligne
+        tableau(2,2) = 0;  // 2. 0
+      else
+        temp = tableau(1,2);   //on va compléter la 1ère ligne, on récupère la valeur de la future deuxième ligne car elle n'est pas au bon endroit
+        tableau(1,1) = 1;
+        tableau(1,2) = 0;      //tableau reconstruit sous le modèle:
+        tableau(2,1) = 2;      //1. 0
+        tableau(2,2) = temp;   //2. temp
+      end
+    end
+    tableauSoigne = tableau;
+endfunction
 //----------------------------------------------------------ETUDE_STATISTIQUE
 function [gagnant] = etudeDeForce(jeu1, jeu2)
     gagnant = (sum(jeu1) - sum(jeu2)) > 0;
@@ -231,25 +247,14 @@ function [] = LanceBataille(nbParties, typeBataille, typeDistribution)
 
     moyTours = moyTours/nbParties;
     resultat = tabul(resultat);
+    resultat = soigneTableau(resultat); //un tabul à 2 lignes de sortie devrait toujours passer par la fonction soigneTableau pour éviter les erreurs d'indice
+
     ForceJeu = tabul(ForceJeu);
+    ForceJeu = soigneTableau(ForceJeu);
     FJ1 = ForceJeu(1,2);
     FJ2 = ForceJeu(2,2);
-    disp(resultat);
-    disp(length(resultat));
-    disp(resultat(1));
-    if(length(resultat) ~= 4) then  //J1 ou J2 n'a eu aucune victoire, le tableau sera incomplet et cela causera une erreur d'indice
-      if(resultat(1) == 1) then
-        resultat(2,1) = 2;  //on complète la 2 ème ligne
-        resultat(2,2) = 0;  // 2. 0
-      else
-        temp = resultat(1,2);   //on va compléter la 1ère ligne, on récupère la valeur de la future deuxième ligne car elle n'est pas au bon endroit
-        resultat(1,1) = 1;
-        resultat(1,2) = 0;      //tableau reconstruit sous le modèle:
-        resultat(2,1) = 2;      //1. 0
-        resultat(2,2) = temp;   //2. temp
-      end
-    end
-    disp(resultat);
+
+
     printf("\n\tJ1 a gagné %d fois\n\tJ2 a gagné %d fois\n",resultat(1,2), resultat(2,2));
     printf("\n\t Les parties favorables à J1 étaient de %d\n\t et les parties favorables à J2 étaients de %d\n",FJ1,FJ2);
     printf("\n\tLa moyenne du nombre de tours est de %d tours.\n",moyTours);

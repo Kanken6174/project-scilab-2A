@@ -13,5 +13,5 @@ clear;*/
 
 exec('fonctions_projet.sci',-1);
 printf("\nVersion simplifiée:\n");
-nbTirages = 2;
+nbTirages = 1;
 LanceBataille(nbTirages, batailleSimple, SDRapide);
