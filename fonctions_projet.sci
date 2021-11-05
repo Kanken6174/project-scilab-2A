@@ -39,20 +39,12 @@ endfunction
 function [gagnantJ1, tour] = batailleSimple(jeu1,jeu2)
 gagnantJ1 = 0;
 tour  = 0;
-graphJ1 = 0;
-graphJ2 = 0;
 nbBataille = 0;
 nbBatailleGJ1 = 0;
 nbBatailleGJ2 = 0;
 
 while(length(jeu1) > 0 && length(jeu2) > 0)
     tour = tour + 1;
-    graphJ1($+1) = jeu1(1);
-    graphJ2($+1) = jeu2(1);
-
-    if(length(jeu1) + length(jeu2) ~= 52) then
-        printf("\n ERREUR PAS 52: %d\n", length(jeu1) + length(jeu2));
-    end
 
     if(jeu1(1) > jeu2(1)) then  //la première carte du joueur 1 est meilleure
         jeu1($+1) = jeu1(1);    //Le joueur 1 récupère les 2 cartes
@@ -62,13 +54,15 @@ while(length(jeu1) > 0 && length(jeu2) > 0)
         jeu2($+1) = jeu1(1);
     else                        //égalité - bataille
         nbBataille = nbBataille +1;
-        winner = rand();
+        timet = clock()($)
+        seed = (timet)*timer();
+        winner = rand(seed);
         if(winner >= 0.5) then
             jeu1($+1) = jeu1(1);    //Le joueur 1 récupère les 2 cartes
             jeu1($+1) = jeu2(1);
             nbBatailleGJ1 = nbBatailleGJ1 +1;
         else
-            jeu1($+1) = jeu1(1);    //Le joueur 2 récupère les 2 cartes
+            jeu2($+1) = jeu1(1);    //Le joueur 2 récupère les 2 cartes
             jeu2($+1) = jeu1(1);
             nbBatailleGJ2 = nbBatailleGJ2 +1;
         end
@@ -201,8 +195,8 @@ function [gagnant] = etudeDeForce(jeu1, jeu2)
 endfunction
 //1) Durée moyenne d'une partie
 
-//----------------------------------------------------------TESTS
-function [] = LanceBataille(nbParties, typeBataille, typeDistribution)
+//----------------------------------------------------------FONCTION MERE BATAILLE
+function [VJ1, VJ2, PFJ1, PFJ2, NBMT, NBMnT, NBMxT, UJ1H, UJ2H] = LanceBataille(nbParties, typeBataille, typeDistribution)
     resultat = 0;   //1 si J1 a gagné, 0 si J2 a gagné
     nbTours = 0;
     moyTours = 0;
@@ -251,30 +245,40 @@ function [] = LanceBataille(nbParties, typeBataille, typeDistribution)
 
     ForceJeu = tabul(ForceJeu);
     ForceJeu = soigneTableau(ForceJeu);
-    FJ1 = ForceJeu(1,2);
-    FJ2 = ForceJeu(2,2);
 
+    PFJ1 = ForceJeu(1,2);   //récupération des résultats
 
-    printf("\n\tJ1 a gagné %d fois\n\tJ2 a gagné %d fois\n",resultat(1,2), resultat(2,2));
-    printf("\n\t Les parties favorables à J1 étaient de %d\n\t et les parties favorables à J2 étaients de %d\n",FJ1,FJ2);
-    printf("\n\tLa moyenne du nombre de tours est de %d tours.\n",moyTours);
-    printf("\n\tLe nombre minimal de tours est de %d tours",minTours);
-    printf("\n\tLe nombre maximal de tours est de %d tours",maxTours);
-
-    nbTours = gsort(nbTours);   //pour rendre le graphe plus lisible
-    bar(nbTours);
-
-    figure;
+    PFJ2 = ForceJeu(2,2);
+    VJ1 = resultat(1,2);
+    VJ2 = resultat(2,2);
+    NBT = gsort(nbTours);
+    NBMT = moyTours;
+    NBMnT = minTours;
+    NBMxT = maxTours;
 
     J1H = tabul(jeu1Historique);
     J1H = J1H(1:$-1,:);
     J2H = tabul(jeu2Historique);
     J2H = J2H(1:$-1,:);
-    y=J1H(:,2);
-    y(:,2) = J2H(:,2);
-    x = [1:13];
-    bar(x,y,'grouped');
+
+    UJ1H = J1H(:,2);
+    UJ2H = J2H(:,2);
 
 endfunction
 
-//____________________________________________________________________________________________________________________________
+//____________________________________________________________________________________________________________________________ GUI CODE
+
+function [GUI] = makeGuiResults(VJ1, VJ2, PFJ1, PFJ2, NBMT, NBMnT, NBMxT)
+    GUI = figure('position', [200, 200, 750, 460]);
+    donnees = ["Type de bataille" "nb Tirages" "Victoires J1" "Victoires J2" "Parties Fav. J1" "Parties Fav. J2" "Nb Moyen tours" "Nb min tours" "Nb max tours"];
+    typesBatailles = ["complexe, remise aléatoire" "complexe, remise standard" "simplifiée"]';
+    table = [donnees; [ typesBatailles string(VJ1+VJ2) string(VJ1) string(VJ2) string(PFJ1) string(PFJ2) string(NBMT) string(NBMnT) string(NBMxT)]];
+
+    GUI = gcf();
+
+    as = get(GUI, "axes_size");
+    ut = uicontrol(GUI, "style", "table",..
+                    "string", table,..
+                    "position", [50 (as(2) - 200) 750 75],..
+                    "tooltipstring", "Données des trois types de bataille");
+endfunction

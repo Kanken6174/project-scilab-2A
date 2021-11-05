@@ -1,17 +1,21 @@
-clc
-/*exec('fonctions_projet.sci',-1);
-printf("\n\tEtude statistique du jeu de bataille standard, 52 cartes réparties aléatoirement (26/26)\n");
-nbTirages = 1000;
-LanceBataille(nbTirages, batailleComplexeAleat, SDRapide);
+clc;
 clear;
-
+printf("=-------------------");
 exec('fonctions_projet.sci',-1);
-printf("\nVersion sans remise aléatoire:\n");
-nbTirages = 1000;
-LanceBataille(nbTirages, batailleComplexe, SDRapide);
-clear;*/
+z = 1;
+nbTirages = 15;
+[VJ1(z), VJ2(z), PFJ1(z), PFJ2(z), NBMT(z), NBMnT(z), NBMxT(z), J1H(:,z), J2H(:,z)]  = LanceBataille(nbTirages, batailleComplexeAleat, SDRapide);
 
-exec('fonctions_projet.sci',-1);
-printf("\nVersion simplifiée:\n");
-nbTirages = 1;
-LanceBataille(nbTirages, batailleSimple, SDRapide);
+clc;
+z = z+1;
+printf("=======-------------");
+[VJ1(z), VJ2(z), PFJ1(z), PFJ2(z), NBMT(z), NBMnT(z), NBMxT(z), J1H(:,z), J2H(:,z)] = LanceBataille(nbTirages, batailleComplexe, SDRapide);
+
+clc;
+z = z+1;
+printf("===============-----");
+[VJ1(z), VJ2(z), PFJ1(z), PFJ2(z), NBMT(z), NBMnT(z), NBMxT(z), J1H(:,z), J2H(:,z)] = LanceBataille(nbTirages, batailleSimple, SDRapide);
+clc;
+printf("====================");
+
+[GUI] = makeGuiResults(VJ1, VJ2, PFJ1, PFJ2, NBMT, NBMnT, NBMxT);
