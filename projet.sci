@@ -131,67 +131,73 @@ endfunction
 
 //----------------------------------------------------------TESTS
 function [] = testJeuNormalBatailleComplexe()
-nbParties = 1000;   //La seule valeur à changer, cela représente le nombre de tirages (parties) à simuler
-resultat = 0;   //1 si J1 a gagné, 0 si J2 a gagné
-nbTours = 0;
-moyTours = 0;
-maxTours = 0;
-minTours = 999999;
-jeu1Historique = zeros(nbParties*26);   //on pré-initialise les vecteurs d'historique pour optimiser les actions type cat
-jeu2Historique = zeros(nbParties*26);
-i = 1;
-ForceJeu = 0;
-tJeuTot = 0;
-tJeuNb = nbParties;
+    nbParties = 1000;   //La seule valeur à changer, cela représente le nombre de tirages (parties) à simuler
+    resultat = 0;   //1 si J1 a gagné, 0 si J2 a gagné
+    nbTours = 0;
+    moyTours = 0;
+    maxTours = 0;
+    minTours = 999999;
+    jeu1Historique = zeros(nbParties*26);   //on pré-initialise les vecteurs d'historique pour optimiser les actions type cat
+    jeu2Historique = zeros(nbParties*26);
+    i = 1;
+    ForceJeu = 0;
+    tJeuTot = 0;
+    tJeuNb = nbParties;
 
 
-while i <= nbParties
-    tickIndex = (i*26);
-    tJeuTot = timer()+tJeuTot;
-    [jeu1,jeu2] = distribution();  //distribution des cartes
-    ForceJeu(i) = etudeDeForce(jeu1, jeu2);
-    for(c = tickIndex+1:tickIndex+26)   //une action type cat (optimisé), on rècupère l'historique de chaque tirage (les cartes au début)
-        jeu1Historique(c) = jeu1(c-tickIndex);
-        jeu2Historique(c) = jeu2(c-tickIndex);
-    end;
-    [J1gagnant, nbTours(i)] = batailleComplexe(jeu1,jeu2);  //execution du jeu bataille complexe
-    resultat(i) = J1gagnant;
-    if(nbTours(i) > maxTours)
-        maxTours = nbTours(i);
+    while i <= nbParties
+        tickIndex = (i*26);
+        tJeuTot = timer()+tJeuTot;
+        [jeu1,jeu2] = distribution();  //distribution des cartes
+        ForceJeu(i) = etudeDeForce(jeu1, jeu2);
+
+        for(c = tickIndex+1:tickIndex+26)   //une action type cat (optimisé), on rècupère l'historique de chaque tirage (les cartes au début)
+            jeu1Historique(c) = jeu1(c-tickIndex);
+            jeu2Historique(c) = jeu2(c-tickIndex);
+        end;
+
+        [J1gagnant, nbTours(i)] = batailleComplexe(jeu1,jeu2);  //execution du jeu bataille complexe
+        resultat(i) = J1gagnant;
+
+        if(nbTours(i) > maxTours)
+            maxTours = nbTours(i);
+        end
+
+        if(nbTours(i) < minTours)
+            minTours = nbTours(i);
+        end
+
+        moyTours = moyTours + nbTours(i);//on ajoute le nombre total de tours pour ce tirage au nb total pour tous
+        i = i +1;   //incrémentation du nb de batailles effectuées
     end
-    if(nbTours(i) < minTours)
-        minTours = nbTours(i);
-    end
-    moyTours = moyTours + nbTours(i);//on ajoute le nombre total de tours pour ce tirage au nb total pour tous
-    i = i +1;   //incrémentation du nb de batailles effectuées
-end
-printf("\nTemps d execution total : %f",tJeuTot);
-printf("\nTemps d execution moyen : %f",tJeuTot/tJeuNb);
+    
+    printf("\nTemps d execution total : %f",tJeuTot);
+    printf("\nTemps d execution moyen : %f",tJeuTot/tJeuNb);
 
-moyTours = moyTours/nbParties;
-resultat = tabul(resultat);
-ForceJeu = tabul(ForceJeu);
-FJ1 = ForceJeu(1,2);
-FJ2 = ForceJeu(2,2);
+    moyTours = moyTours/nbParties;
+    resultat = tabul(resultat);
+    ForceJeu = tabul(ForceJeu);
+    FJ1 = ForceJeu(1,2);
+    FJ2 = ForceJeu(2,2);
 
-printf("\n\tJ1 a gagné %d fois\n\tJ2 a gagné %d fois\n",resultat(1,2), resultat(2,2));
-printf("\n\t Les parties favorables à J1 étaient de %d\n\t et les parties favorables à J2 étaients de %d\n",FJ1,FJ2);
-printf("\n\tLa moyenne du nombre de tours est de %d tours.\n",moyTours);
-printf("\n\tLe nombre minimal de tours est de %d tours",minTours);
-printf("\n\tLe nombre maximal de tours est de %d tours",maxTours);
+    printf("\n\tJ1 a gagné %d fois\n\tJ2 a gagné %d fois\n",resultat(1,2), resultat(2,2));
+    printf("\n\t Les parties favorables à J1 étaient de %d\n\t et les parties favorables à J2 étaients de %d\n",FJ1,FJ2);
+    printf("\n\tLa moyenne du nombre de tours est de %d tours.\n",moyTours);
+    printf("\n\tLe nombre minimal de tours est de %d tours",minTours);
+    printf("\n\tLe nombre maximal de tours est de %d tours",maxTours);
 
-nbTours = gsort(nbTours);   //pour rendre le graphe plus lisible
-bar(nbTours);
+    nbTours = gsort(nbTours);   //pour rendre le graphe plus lisible
+    bar(nbTours);
 
-figure;
+    figure;
 
-J1H = tabul(jeu1Historique);
-J1H = J1H(1:$-1,:);
-J2H = tabul(jeu2Historique);
-J2H = J2H(1:$-1,:);
-y=J1H(:,2);
-y(:,2) = J2H(:,2);
-x = [1:13];
-bar(x,y,'grouped');
+    J1H = tabul(jeu1Historique);
+    J1H = J1H(1:$-1,:);
+    J2H = tabul(jeu2Historique);
+    J2H = J2H(1:$-1,:);
+    y=J1H(:,2);
+    y(:,2) = J2H(:,2);
+    x = [1:13];
+    bar(x,y,'grouped');
 
 endfunction
