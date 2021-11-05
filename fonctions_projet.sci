@@ -22,7 +22,7 @@ endfunction
 //----------------------------------------- RANDOMISATION DU DECK (INJUSTE J1)
 function cards=SDInjuste(cardPile)
     cards = gsort(cardPile);    //J1 aura toues les grandes cartes, pas de hasard
-function
+endfunction
 
 //------------------------------------------ DISTRIBUION
 function [jeu1,jeu2]=distribution(méthodeDistribution)
@@ -101,12 +101,7 @@ while(length(jeu1) > 0 && length(jeu2) > 0) // tant que les joueurs ont assez de
     
     elseif(jeu1(1) == jeu2(1))//égalité ---- bataille
             if(length(jeu1) < 6 || length(jeu2) < 6) then
-//              if(length(jeu1) < 1 || length(jeu2) < 1) then
-//                    err = 1;
-//                    return; //ne devrait pas etre possible
-//                end
                 gagnantJ1 = length(jeu1) > length(jeu2) ;//gagne au nb de cartes
-//                err = 0;
                 return;
             end
             if(isempty(batailleDeck)) then
