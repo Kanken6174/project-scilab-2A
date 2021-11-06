@@ -205,7 +205,7 @@ function [tableauSoigne] = soigneTableau(tableau)   //Cette fonction assure le r
     end
     tableauSoigne = tableau;
 endfunction
-//----------------------------------------------------------ETUDE_STATISTIQUE
+//----------------------------------------------------------ETUDE_FORCE
 function [gagnant] = etudeDeForce(jeu1, jeu2)
     gagnant = (sum(jeu1) - sum(jeu2)) > 0;
 endfunction
@@ -272,21 +272,21 @@ function [VJ1, VJ2, PFJ1, PFJ2, NBMT, NBMnT, NBMxT, UJ1H, UJ2H] = LanceBataille(
 
     PFJ1 = ForceJeu(1,2);   //récupération des résultats
 
-    PFJ2 = ForceJeu(2,2);
-    VJ1 = resultat(1,2);
-    VJ2 = resultat(2,2);
-    NBT = gsort(nbTours);
-    NBMT = moyTours;
-    NBMnT = minTours;
-    NBMxT = maxTours;
+    PFJ2 = ForceJeu(2,2);   //parties favorables à J2
+    VJ1 = resultat(1,2);    // Victoires de J1
+    VJ2 = resultat(2,2);    //Victoires de J2
+    NBT = gsort(nbTours);   //nombre de tours
+    NBMT = moyTours;        //nombre moyen de tours
+    NBMnT = minTours;       //Nombre minimum de tours
+    NBMxT = maxTours;       //Nombre maximum de tours
 
     J1H = tabul(jeu1Historique);
     J1H = J1H(1:$-1,:);
     J2H = tabul(jeu2Historique);
     J2H = J2H(1:$-1,:);
 
-    UJ1H = J1H(:,2);
-    UJ2H = J2H(:,2);
+    UJ1H = J1H(:,2);    //Historique du joueur 1 (cartes)
+    UJ2H = J2H(:,2);    //Historique du joueur 2 (cartes)
 
 endfunction
 
