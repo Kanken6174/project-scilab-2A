@@ -20,16 +20,32 @@ endfunction
 
 
 //----------------------------------------- RANDOMISATION DU DECK (INJUSTE J1)
-function cards=SDInjuste(cardPile, nbCartes)
-    cards = gsort(cardPile);    //J1 aura toues les grandes cartes, pas de hasard
+function cards=SDInjuste(cardPile, nbCartes, indexInjuste)  //indexInjuste entre 1 et 26
+    if(indexInjuste > 26) then
+        indexInjuste = 26;
+    elseif(indexInjuste < 1) then
+        indexInjuste  = 1;
+    end
+    cards = samwr(nbCartes,1,cardPile);
+    for i = 1:indexInjuste
+        if cards(i) < cards(i+26) then
+            temp = cards(i)
+            cards(i) = cards(i+26);
+            cards(i+26) = cards(i);
+        end
+    end
 endfunction
 
 //------------------------------------------ DISTRIBUION
-function [jeu1,jeu2]=distribution(méthodeDistribution)
+function [jeu1,jeu2]=distribution(méthodeDistribution, indexInjuste)
 cardPile = 1:13;
 cardPile = repmat(cardPile,4,1);    //on répète le contenu du tableay cardPile 4 fois (4x13 = 42)
 
-cardPile = méthodeDistribution(cardPile, 52); //trie le tas de cartes (deck) selon la méthode de choix
+if ~exists("indexInjuste","local") then //cela rend indexInjuste optionnel
+    cardPile = méthodeDistribution(cardPile, 52); //trie le tas de cartes (deck) selon la méthode de choix
+else
+    cardPile = méthodeDistribution(cardPile, 52, indexInjuste);
+end
 
 jeu1 = cardPile(1:26);  //on sépare les cartes en 2 tas de 26 cartes
 jeu2 = cardPile(27:52);
@@ -193,10 +209,9 @@ endfunction
 function [gagnant] = etudeDeForce(jeu1, jeu2)
     gagnant = (sum(jeu1) - sum(jeu2)) > 0;
 endfunction
-//1) Durée moyenne d'une partie
 
 //----------------------------------------------------------FONCTION MERE BATAILLE
-function [VJ1, VJ2, PFJ1, PFJ2, NBMT, NBMnT, NBMxT, UJ1H, UJ2H] = LanceBataille(nbParties, typeBataille, typeDistribution)
+function [VJ1, VJ2, PFJ1, PFJ2, NBMT, NBMnT, NBMxT, UJ1H, UJ2H] = LanceBataille(nbParties, typeBataille, typeDistribution, indexInjuste)
     resultat = 0;   //1 si J1 a gagné, 0 si J2 a gagné
     nbTours = 0;
     moyTours = 0;
@@ -208,12 +223,21 @@ function [VJ1, VJ2, PFJ1, PFJ2, NBMT, NBMnT, NBMxT, UJ1H, UJ2H] = LanceBataille(
     ForceJeu = 0;
     tJeuTot = 0;
     tJeuNb = nbParties;
-
+    existsInd = %f;
+    if ~exists("indexInjuste","local") then //cela rend indexInjuste optionnel
+        existsInd = %f
+    else
+        existsInd = %t
+    end
 
     while i <= nbParties
         tickIndex = (i*26);
         tJeuTot = timer()+tJeuTot;
-        [jeu1,jeu2] = distribution(typeDistribution);  //distribution des cartes, qui va utiliser le type de distribution passé en argument
+        if(existsInd) then
+            [jeu1,jeu2] = distribution(typeDistribution, indexInjuste);
+        else
+            [jeu1,jeu2] = distribution(typeDistribution);  //distribution des cartes, qui va utiliser le type de distribution passé en argument
+        end
         ForceJeu(i) = etudeDeForce(jeu1, jeu2);
 
         for(c = tickIndex+1:tickIndex+26)   //une action type cat (optimisé), on rècupère l'historique de chaque tirage (les cartes au début)
