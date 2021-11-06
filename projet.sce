@@ -44,8 +44,10 @@ nbTirages = 10;
 
 */
 //__________________________________________________________________________ETUDE CALCULATOIRE
-
-for i = 1:200
+nbEssais = 200
+nbCartes = nbEssais * 26;   //Par joueur, donc *26 et pas *52
+proba1Carte = 1/13;
+for i = 1:nbEssais
     [jeu1(i,:),jeu2(i,:)]=distribution(SDRapide);
 end
 jeu1 = tabul(jeu1);
@@ -68,3 +70,12 @@ ut = uicontrol(GUI, "style", "table",..
                 "string", table,..
                 "position", [50 (as(2) - 200) 750 40],..
                 "tooltipstring", "Données des tirages de carte J1");
+
+esperance = nbCartes * proba1Carte;
+variance = root(nbCartes*proba1Carte*(1-proba1Carte));
+
+Mean = 0;
+Std = 1;
+x = -6:6;
+[P,Q]=cdfnor("PQ",x,Mean*ones(x),Std*ones(x));
+[x' P' Q']
