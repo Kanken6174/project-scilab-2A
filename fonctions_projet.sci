@@ -271,7 +271,7 @@ endfunction
 function [GUI] = makeGuiResults(VJ1, VJ2, PFJ1, PFJ2, NBMT, NBMnT, NBMxT)
     GUI = figure('position', [200, 200, 750, 460]);
     donnees = ["Type de bataille" "nb Tirages" "Victoires J1" "Victoires J2" "Parties Fav. J1" "Parties Fav. J2" "Nb Moyen tours" "Nb min tours" "Nb max tours"];
-    typesBatailles = ["complexe, remise aléatoire" "complexe, remise standard" "simplifiée"]';
+    typesBatailles = ["cmplx RA" "cmplx RS" "simplifiée"]';
     table = [donnees; [ typesBatailles string(VJ1+VJ2) string(VJ1) string(VJ2) string(PFJ1) string(PFJ2) string(NBMT) string(NBMnT) string(NBMxT)]];
 
     GUI = gcf();
