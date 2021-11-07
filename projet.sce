@@ -1,76 +1,97 @@
 clc;
 clear;
+
+pgID = progressionbar('Initialisation de l''application...');
 exec('fonctions_projet.sci',-1);
+
 rotationModesString = ["batailleComplexeAleat" "batailleComplexe" "batailleSimple"] //noms de nos batailles
 z = 1
+
+[GUI] = makeGUIInit();
+close(pgID);
+
+
 //__________________________________________________________________________ETUDE GENERALE
-/*
-nbTirages = 100;
-    printf("\nEn cours: %s\n--------------------", rotationModesString(z));
+nbTirages = 2000;
+    [myBar] = makeLoadingbar(rotationModesString(z), z/10);
     [VJ1(z), VJ2(z), PFJ1(z), PFJ2(z), NBMT(z), NBMnT(z), NBMxT(z), J1H(:,z), J2H(:,z)]  = LanceBataille(nbTirages, batailleComplexeAleat, SDRapide);
     z = z+1;
-    printf("\nEn cours: %s\n--------------------", rotationModesString(z));
+    
+    updateBar(myBar, z/10, rotationModesString(z));
     [VJ1(z), VJ2(z), PFJ1(z), PFJ2(z), NBMT(z), NBMnT(z), NBMxT(z), J1H(:,z), J2H(:,z)]  = LanceBataille(nbTirages, batailleComplexe, SDRapide);
     z = z+1;
-    printf("\nEn cours: %s\n--------------------", rotationModesString(z));
+    
+    updateBar(myBar, z/10, rotationModesString(z));
     [VJ1(z), VJ2(z), PFJ1(z), PFJ2(z), NBMT(z), NBMnT(z), NBMxT(z), J1H(:,z), J2H(:,z)]  = LanceBataille(nbTirages, batailleSimple, SDRapide);
     z = z+1;
+    donnees = [[nbTirages nbTirages nbTirages]', VJ1, VJ2, PFJ1, PFJ2, NBMT, NBMnT, NBMxT];
+    legendesHaut = ["Type de bataille" "nb Tirages" "Victoires J1" "Victoires J2" "Parties Fav. J1" "Parties Fav. J2" "Nb Moyen tours" "Nb min tours" "Nb max tours"];
+    typesBatailles = ["cmplx RA" "cmplx RS" "simplifiée"]';
+    Xpos = 300; //position depuis la droite de la fenêtre
+    Ypos = 400; //position depuis le bas de la fenêtre
+    tooltip = "table des données de l''étude générale";
+    makeGuiTable(GUI, typesBatailles, legendesHaut, donnees, Xpos, Ypos, tooltip);
 
-    [GUI] = makeGuiResults(VJ1, VJ2, PFJ1, PFJ2, NBMT, NBMnT, NBMxT);
+
 //__________________________________________________________________________ETUDE INJUSTE
 nbTirages = 10;
-    printf("\nEn cours: %s\n--------------------", rotationModesString(z));
-    for i = 1:23
-        disp(i)
-        [VJ1(i), VJ2(i), PFJ1(i), PFJ2(i), NBMT(i), NBMnT(i), NBMxT(i), J1H(:,i), J2H(:,i)]  = LanceBataille(nbTirages, batailleComplexeAleat, SDInjuste, i);
-        VJ1(i) = mean(VJ1(i))/nbTirages;
-        VJ2(i) = mean(VJ2(i))/nbTirages;
-    end
+for i = 1:23
+    updateBar(myBar, (i/230)+0.4, "Etude Injuste : batailleComplexeAleat, indice injuste " + string(i));
+    [VJ1(i), VJ2(i)]  = LanceBatailleLite(nbTirages, batailleComplexeAleat, SDInjuste, i);
+    VJ1(i) = mean(VJ1(i))
+    VJ2(i) = mean(VJ2(i))
+end
+VJ1 = VJ1/nbTirages;
+VJ2 = VJ2/nbTirages;
+    subplot(4,4,1);
     plot([VJ1 VJ2]);
-    figure();
+
+updateBar(myBar, 0.5, "Etude Injuste : batailleComplexe, indice injuste : 1-23");
     for i = 1:23
+        disp("---------------",timer());
         [VJ1(i), VJ2(i), PFJ1(i), PFJ2(i), NBMT(i), NBMnT(i), NBMxT(i), J1H(:,i), J2H(:,i)]  = LanceBataille(nbTirages, batailleComplexe, SDInjuste, i);
+        disp(timer());
         VJ1(i) = mean(VJ1(i))/nbTirages;
         VJ2(i) = mean(VJ2(i))/nbTirages;
     end
+
+    subplot(4,4,2);
     plot([VJ1 VJ2]);
-    figure();
+
+updateBar(myBar, 0.5, "Etude Injuste : batailleSimple, indice injuste : 1-23");
     for i = 1:23
         [VJ1(i), VJ2(i), PFJ1(i), PFJ2(i), NBMT(i), NBMnT(i), NBMxT(i), J1H(:,i), J2H(:,i)]  = LanceBataille(nbTirages, batailleSimple, SDInjuste, i);
         VJ1(i) = mean(VJ1(i))/nbTirages;
         VJ2(i) = mean(VJ2(i))/nbTirages;
     end
+    subplot(4,4,3);
     plot([VJ1 VJ2]);
+/*
 
-*/
-//__________________________________________________________________________ETUDE CALCULATOIRE
-nbEssais = 200
+//__________________________________________________________________________ETUDE CALCULATOIRE - fonction de distribution
+/*
+nbEssais = 10
 nbCartes = nbEssais * 26;   //Par joueur, donc *26 et pas *52
 proba1Carte = 1/13;
 for i = 1:nbEssais
     [jeu1(i,:),jeu2(i,:)]=distribution(SDRapide);
 end
 jeu1 = tabul(jeu1);
-Carte = [" " "1" "2" "3" "4" "5" "6" "7" "8" "9" "10" "11" "12" "13"];
+Carte = [" " string([1:13])];
 nbTire = [string(jeu1(:,2))];
 
 nbTire = flipdim(nbTire,1); //il faut retourner sinon le tableau sera inversé à l'affichage [inversion du tableau]
 
-disp(length(nbTire));
-legende = ["nb Cartes"]';
+Xpos = 500;
+Ypos = 300;
+donnees = nbTire;
+legendeGauche = ["nb Cartes"]';
+legendesHaut = Carte;
+tooltip = "Données des tirages de carte J1";
 
-table = [Carte ; [ legende nbTire(1) nbTire(2) nbTire(3) nbTire(4) nbTire(5) nbTire(6) nbTire(7) nbTire(8) nbTire(9) nbTire(10) nbTire(11) nbTire(12) nbTire(13)]];//scilab refuse nbTire seul...
+makeGuiTable(GUI, legendeGauche, legendesHaut, donnees, Xpos, Ypos, tooltip);
 
-GUI = figure('position', [200, 200, 750, 460]);
-GUI = gcf();
-as = get(GUI, "axes_size");
-disp("prob ici");
-
-ut = uicontrol(GUI, "style", "table",..
-                "string", table,..
-                "position", [50 (as(2) - 200) 750 40],..
-                "tooltipstring", "Données des tirages de carte J1");
-
+/*
 esperance = nbCartes * proba1Carte;
 variance = root(nbCartes*proba1Carte*(1-proba1Carte));
 
@@ -79,3 +100,8 @@ p = p(1:600);
 plot(p);
 pc = cumsum(p);
 plot(pc,"r");
+*/
+*/
+//------------------------------------------------------------------ETUDE CALCULATOIRE - 
+close(myBar);
+*/

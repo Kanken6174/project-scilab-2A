@@ -1,5 +1,3 @@
-clear;
-
 //------------------------------------------ RANDOMISATION DU DECK (LENT)
 function cards=SDLent(cardPile, nbCartes)
 d = 1
@@ -20,7 +18,7 @@ endfunction
 
 
 //----------------------------------------- RANDOMISATION DU DECK (INJUSTE J1)
-function cards=SDInjuste(cardPile, nbCartes, indexInjuste)  //indexInjuste entre 1 et 26
+function cards=SDInjuste(cardPile, nbCartes, indexInjuste)  //indexInjuste entre 1 et 23 [24-26 ne fonctionneront pas à tous les coups]
     if(indexInjuste > 26) then
         indexInjuste = 26;
     elseif(indexInjuste < 1) then
@@ -58,7 +56,8 @@ tour  = 0;
 nbBataille = 0;
 nbBatailleGJ1 = 0;
 nbBatailleGJ2 = 0;
-
+timet = clock()($)
+seed = (timet)*timer();
 while(length(jeu1) > 0 && length(jeu2) > 0)
     tour = tour + 1;
 
@@ -70,8 +69,6 @@ while(length(jeu1) > 0 && length(jeu2) > 0)
         jeu2($+1) = jeu1(1);
     else                        //égalité - bataille
         nbBataille = nbBataille +1;
-        timet = clock()($)
-        seed = (timet)*timer();
         winner = rand(seed);
         if(winner >= 0.5) then
             jeu1($+1) = jeu1(1);    //Le joueur 1 récupère les 2 cartes
@@ -221,7 +218,6 @@ function [VJ1, VJ2, PFJ1, PFJ2, NBMT, NBMnT, NBMxT, UJ1H, UJ2H] = LanceBataille(
     jeu2Historique = zeros(nbParties*26);
     i = 1;
     ForceJeu = 0;
-    tJeuTot = 0;
     tJeuNb = nbParties;
     existsInd = %f;
     if ~exists("indexInjuste","local") then //cela rend indexInjuste optionnel
@@ -232,7 +228,6 @@ function [VJ1, VJ2, PFJ1, PFJ2, NBMT, NBMnT, NBMxT, UJ1H, UJ2H] = LanceBataille(
 
     while i <= nbParties
         tickIndex = (i*26);
-        tJeuTot = timer()+tJeuTot;
         if(existsInd) then
             [jeu1,jeu2] = distribution(typeDistribution, indexInjuste);
         else
@@ -259,9 +254,6 @@ function [VJ1, VJ2, PFJ1, PFJ2, NBMT, NBMnT, NBMxT, UJ1H, UJ2H] = LanceBataille(
         moyTours = moyTours + nbTours(i);//on ajoute le nombre total de tours pour ce tirage au nb total pour tous
         i = i +1;   //incrémentation du nb de batailles effectuées
     end
-    
-    printf("\nTemps d execution total : %f",tJeuTot);
-    printf("\nTemps d execution moyen : %f",tJeuTot/tJeuNb);
 
     moyTours = moyTours/nbParties;
     resultat = tabul(resultat);
@@ -289,20 +281,74 @@ function [VJ1, VJ2, PFJ1, PFJ2, NBMT, NBMnT, NBMxT, UJ1H, UJ2H] = LanceBataille(
     UJ2H = J2H(:,2);    //Historique du joueur 2 (cartes)
 
 endfunction
-
+//----------------------------------------------------------FONCTION MERE BATAILLE ALLEGEE
+function [VJ1, VJ2] = LanceBatailleLite(nbParties, typeBataille, typeDistribution, indexInjuste)
+    resultat = 0;   //1 si J1 a gagné, 0 si J2 a gagné
+    existsInd = %f;
+    if ~exists("indexInjuste","local") then //cela rend indexInjuste optionnel
+        existsInd = %f
+    else
+        existsInd = %t
+    end
+    while i <= nbParties
+        tickIndex = (i*26);
+        if(existsInd) then
+            [jeu1,jeu2] = distribution(typeDistribution, indexInjuste);
+        else
+            [jeu1,jeu2] = distribution(typeDistribution);  //distribution des cartes, qui va utiliser le type de distribution passé en argument
+        end
+        [J1gagnant, nbTours(i)] = typeBataille(jeu1,jeu2);  //execution du jeu bataille
+        resultat(i) = J1gagnant;
+        i = i +1;   //incrémentation du nb de batailles effectuées
+    end
+    resultat = tabul(resultat);
+    resultat = soigneTableau(resultat); //un tabul à 2 lignes de sortie devrait toujours passer par la fonction soigneTableau pour éviter les erreurs d'indice
+    VJ1 = resultat(1,2);    // Victoires de J1
+    VJ2 = resultat(2,2);    //Victoires de J2
+    disp("fin:",timer())
+endfunction
 //____________________________________________________________________________________________________________________________ GUI CODE
 
-function [GUI] = makeGuiResults(VJ1, VJ2, PFJ1, PFJ2, NBMT, NBMnT, NBMxT)
-    GUI = figure('position', [200, 200, 750, 460]);
-    donnees = ["Type de bataille" "nb Tirages" "Victoires J1" "Victoires J2" "Parties Fav. J1" "Parties Fav. J2" "Nb Moyen tours" "Nb min tours" "Nb max tours"];
-    typesBatailles = ["cmplx RA" "cmplx RS" "simplifiée"]';
-    table = [donnees; [ typesBatailles string(VJ1+VJ2) string(VJ1) string(VJ2) string(PFJ1) string(PFJ2) string(NBMT) string(NBMnT) string(NBMxT)]];
+function [GUI] = makeGUIInit()  //créé une figure standard
+    GUI = figure('position', [200, 0, 1600, 800], 'Figure_name', "Projet probabilités yorick geoffre");
+endfunction
 
+function [loadBar] = makeLoadingbar(msg, initValue)
+    loadBar=waitbar(string(msg));
+endfunction
+
+function [] = updateBar(handle, value, msg)
+    waitbar(value, string(msg), handle);
+endfunction
+
+function [GUI] = getMainGUI()   //peu usité, uniquement si on perd GUI
     GUI = gcf();
+endfunction
 
+function [ColVector] = swapVectorToCol(RowVector)
+    l = length(RowVector);
+    temp = zeros(2,l);
+    for i = 1:l
+        temp(1,i) = RowVector(i);
+    end
+    ColVector = temp(1,:);
+endfunction
+
+//donnees = ["Type de bataille" "nb Tirages" "Victoires J1" "Victoires J2" "Parties Fav. J1" "Parties Fav. J2" "Nb Moyen tours" "Nb min tours" "Nb max tours"];
+//typesBatailles = ["cmplx RA" "cmplx RS" "simplifiée"]';
+//VJ1, VJ2, PFJ1, PFJ2, NBMT, NBMnT, NBMxT,
+function [] = makeGuiTable( GUI, legendesGauche, legendesHaut, donnees, Xpos, Ypos, tooltip)
     as = get(GUI, "axes_size");
-    ut = uicontrol(GUI, "style", "table",..
+    col = length(length(legendesHaut)); //nombre de colonnes
+    disp(col);
+    VecteurPosition = [Xpos Ypos (100*col) (8*col)];
+
+    tooltip = string(tooltip)
+
+    table = [legendesHaut; [ legendesGauche string(donnees)]];
+
+    ut = uicontrol(GUI, "style", "table",.. //.. = continuation à la prochaine ligne
                     "string", table,..
-                    "position", [50 (as(2) - 200) 750 75],..
-                    "tooltipstring", "Données des trois types de bataille");
+                    "position", VecteurPosition,..
+                    "tooltipstring", tooltip);
 endfunction
