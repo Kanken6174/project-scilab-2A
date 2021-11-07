@@ -54,7 +54,7 @@ jeu1 = tabul(jeu1);
 Carte = [" " "1" "2" "3" "4" "5" "6" "7" "8" "9" "10" "11" "12" "13"];
 nbTire = [string(jeu1(:,2))];
 
-nbTire = flipdim(nbTire,1); //il faut retourner sinon le tableau sera inversé à l'affichage
+nbTire = flipdim(nbTire,1); //il faut retourner sinon le tableau sera inversé à l'affichage [inversion du tableau]
 
 disp(length(nbTire));
 legende = ["nb Cartes"]';
@@ -74,8 +74,8 @@ ut = uicontrol(GUI, "style", "table",..
 esperance = nbCartes * proba1Carte;
 variance = root(nbCartes*proba1Carte*(1-proba1Carte));
 
-Mean = 0;
-Std = 1;
-x = -6:6;
-[P,Q]=cdfnor("PQ",x,Mean*ones(x),Std*ones(x));
-[x' P' Q']
+p = binomial(proba1Carte, nbCartes);
+p = p(1:600);
+plot(p);
+pc = cumsum(p);
+plot(pc,"r");
